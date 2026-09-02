@@ -3,3 +3,6 @@ build/
 pubspec.lock
 *.iml
 .idea/
+
+# internal dev doc: never publish
+/CLAUDE.md

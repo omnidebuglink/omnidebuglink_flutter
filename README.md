@@ -97,4 +97,4 @@ Apps with their own zone can forward manually via
 
 ## License
 
-Same as the OmniDebugLink project.
+Released under the [MIT License](LICENSE).

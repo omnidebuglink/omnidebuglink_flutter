@@ -16,7 +16,7 @@ dependencies:
   omnidebuglink:
     git:
       url: https://github.com/omnidebuglink/omnidebuglink_flutter.git
-      ref: v0.1.0
+      ref: v0.2.0
 ```
 
 ## Quick start
@@ -26,7 +26,7 @@ import 'package:omnidebuglink/omnidebuglink.dart';
 
 void main() {
   OmniDebugLink.bootstrap(          // recommended: takes over the zone,
-    url: 'wss://api.omnidebuglink.dev/ws?token=<clientToken>', // catching uncaught async errors & print
+    token: '<clientToken>',              // catching uncaught async errors & print
     appVersion: '1.2.0',
     app: const MyApp(),
   );
@@ -37,7 +37,7 @@ Or manage the lifecycle yourself:
 
 ```dart
 runApp(const MyApp());
-await OmniDebugLink.start('wss://api.omnidebuglink.dev/ws?token=<clientToken>');
+await OmniDebugLink.start('<clientToken>');  // relay URL is baked in
 ```
 
 Route-stack reporting (optional — without it get_state returns routes:null

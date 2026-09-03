@@ -20,18 +20,21 @@ enum LinkState { stopped, connecting, connected }
 /// // Recommended: one-call bootstrap (also captures uncaught async errors
 /// // and print() via a guarded zone).
 /// OmniDebugLink.bootstrap(
-///   url: 'wss://api.omnidebuglink.dev/ws?token=<clientToken>',
+///   token: '<clientToken>',
 ///   app: const MyApp(),
 /// );
 ///
 /// // Or, if you manage zones yourself:
 /// //   runApp(const MyApp());
-/// //   OmniDebugLink.start('wss://api.omnidebuglink.dev/ws?token=<t>');
+/// //   OmniDebugLink.start('<clientToken>');
 /// ```
 class OmniDebugLink {
   OmniDebugLink._();
 
-  static const libVersion = '0.1.0';
+  static const libVersion = '0.2.0';
+
+  /// Relay endpoint (baked in; self-hosted relays can change this constant).
+  static const relayUrl = 'wss://api.omnidebuglink.dev/ws';
 
   /// Master switch for write/action tasks. false = read-only observation
   /// mode (reported in hello). Takes effect on the next hello; call
@@ -54,7 +57,7 @@ class OmniDebugLink {
 
   // ---------------------------------------------------------------- start
 
-  static Future<void> start(String url, {String? appVersion}) async {
+  static Future<void> start(String clientToken, {String? appVersion}) async {
     WidgetsFlutterBinding.ensureInitialized();
     if (state != LinkState.stopped) return;
     _appVersion = appVersion;
@@ -72,7 +75,7 @@ class OmniDebugLink {
         level: 'warning');
 
     final conn = OmniDebugLinkConnection(
-      url: url,
+      url: '$relayUrl?token=${Uri.encodeQueryComponent(clientToken)}',
       buildHello: _buildHello,
       onTask: _dispatch,
       onState: (connected) {
@@ -191,13 +194,13 @@ class OmniDebugLink {
   /// One-call bootstrap: runs [app] inside a guarded zone that feeds uncaught
   /// async errors and print() output into read_logs, then starts the link.
   static void bootstrap({
-    required String url,
+    required String token,
     required Widget app,
     String? appVersion,
   }) {
     runZonedGuarded(() {
       WidgetsFlutterBinding.ensureInitialized();
-      unawaited(start(url, appVersion: appVersion));
+      unawaited(start(token, appVersion: appVersion));
       runApp(app);
     }, (error, stack) {
       recordError(error, stack);

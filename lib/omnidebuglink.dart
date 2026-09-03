@@ -3,7 +3,7 @@
 /// Usage:
 /// ```dart
 /// OmniDebugLink.bootstrap( // or call start() yourself after runApp
-///   url: 'wss://api.omnidebuglink.dev/ws?token=<clientToken>',
+///   token: '<clientToken>',
 ///   app: const MyApp(),
 /// );
 /// ```

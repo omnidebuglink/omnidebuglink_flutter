@@ -59,13 +59,37 @@ Key points:
 
 ## Built-in tasks (19 + 2 conditional)
 
-Read: `ui_traverse` (widget tree dump) / `find_objects` / `view_component` /
-`wait_for` / `screenshot` (PNG) / `read_logs` / `get_perf` / `get_state` / `prefs`
-Write: `ui_click` / `tap_screen` / `swipe` / `long_press` / `input_text` /
-`set_component` (targeted operations) / `send_key` (soft dispatch) / `prefs` (set/delete)
-Flutter-only: `hot_reload` (registered only in debug/profile builds when the
-VM Service is reachable; no hot_restart — that RPC requires a flutter run
-session, which standalone apps don't have)
+Flutter's element tree rebuilds constantly and is 70+ levels deep, so **path addressing is unreliable by design**: operation tasks locate targets by `key` / `text` / `widget_type` substring (+`index`), and locating + acting happen atomically inside one task. Path is only an exact-address fallback.
+
+Read tasks:
+
+| Task | What it does |
+|---|---|
+| `ui_traverse` | Widget tree snapshot, **flat list by default** (depth/name/key/text/rect/center, token-efficient; `flat:false` for nested, 3000-node cap) |
+| `find_objects` | Search by text / key / widget_type substring; matches carry center coords and a hint to pass the same locator straight to an action task |
+| `view_component` | One widget in depth: targeted properties + renderObject info, same locators |
+| `wait_for` | Poll every 200 ms until a key / text / widget_type / path appears; timeout returns `found: false`, not an error |
+| `screenshot` | PNG via `OffsetLayer.toImage` (`__odl_file` envelope), downsampling loop to fit the base64 budget |
+| `read_logs` | Subscription buffer (no history before start): Flutter framework errors, platform-dispatched errors, `debugPrint` |
+| `get_perf` | FrameTiming percentiles (p50/p95/p99) + RSS |
+| `get_state` | App state + route stack (register `OmniDebugLink.routeObserver` in `MaterialApp`) |
+| `prefs` | Read SharedPreferences (get / list) |
+
+Write tasks (all gated by `actionsEnabled`):
+
+| Task | What it does |
+|---|---|
+| `ui_click` | Real gesture tap (`GestureBinding.handlePointerEvent`) on a target located by key/text/widget_type/index/path — atomically in one call |
+| `tap_screen` | Tap at normalized 0-1 coordinates (top-left origin) |
+| `swipe` | Drag gesture with per-frame `delta` + increasing timestamps (velocity tracking needs both) |
+| `long_press` | Pointer down, hold (recognizer's own timer fires), up |
+| `input_text` | Write text into a field located by key/widget_type/path or the current focus (`text` is the VALUE to enter, not a locator) |
+| `set_component` | Targeted mutations only (no reflection in AOT): text / scroll_offset / scroll_to_end / scroll_to_start / checked |
+| `send_key` | Soft-dispatched enter / escape / tab / space |
+| `prefs` | Write / delete SharedPreferences with valueType coercion |
+
+Flutter-only (debug/profile builds with a reachable VM Service): `hot_reload` — reloads sources in place, pairs great with an AI edit→reload→verify loop. No `hot_restart`: that RPC requires a `flutter run` session, which standalone apps never have.
+
 Basics: `echo` / `ping` / `get_stats`
 
 Coordinates: **normalized 0-1, top-left origin** (same as Android; Unity is
